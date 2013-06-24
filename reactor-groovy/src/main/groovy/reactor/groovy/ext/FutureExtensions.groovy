@@ -19,13 +19,13 @@
 package reactor.groovy.ext
 
 import groovy.transform.CompileStatic
-import reactor.core.Future
-import reactor.core.Promise
-import reactor.core.Stream
+import reactor.core.StandardFuture
+import reactor.core.StandardPromise
+import reactor.core.StandardStream
 import reactor.fn.Consumer
 import reactor.fn.Function
 import reactor.fn.Observable
-import reactor.fn.support.Reduce
+import reactor.fn.support.Reduction
 import reactor.groovy.support.ClosureConsumer
 import reactor.groovy.support.ClosureFunction
 import reactor.groovy.support.ClosureReduce
@@ -40,7 +40,7 @@ class FutureExtensions {
 	 * Alias
 	 */
 
-	static <T, V> Future<V> to(final Future<T> selfType, final key, final Observable observable) {
+	static <T, V> StandardFuture<V> to(final StandardFuture<T> selfType, final key, final Observable observable) {
 		selfType.consume key, observable
 	}
 
@@ -48,39 +48,39 @@ class FutureExtensions {
 	 * Closure converters
 	 */
 
-	static <T, V> Future<V> map(final Future<T> selfType, final Closure<V> closure) {
+	static <T, V> StandardFuture<V> map(final StandardFuture<T> selfType, final Closure<V> closure) {
 		selfType.map new ClosureFunction<T, V>(closure)
 	}
 
-	static <T> Future<T> consume(final Future<T> selfType, final Closure closure) {
+	static <T> StandardFuture<T> consume(final StandardFuture<T> selfType, final Closure closure) {
 		selfType.consume new ClosureConsumer<T>(closure)
 	}
 
-	static <T> Stream<T> filter(final Stream<T> selfType, final Closure<Boolean> closure) {
+	static <T> StandardStream<T> filter(final StandardStream<T> selfType, final Closure<Boolean> closure) {
 		selfType.filter new ClosureFunction<T, Boolean>(closure)
 	}
 
-	static <T, V> Stream<V> reduce(final Stream<T> selfType, final Closure<V> closure, V initial = null) {
+	static <T, V> StandardStream<V> reduce(final StandardStream<T> selfType, final Closure<V> closure, V initial = null) {
 		selfType.reduce new ClosureReduce<T, V>(closure), initial
 	}
 
-	static <T, E> Future<T> when(final Future<T> selfType, final Class<E> exceptionType, final Closure closure) {
+	static <T, E> StandardFuture<T> when(final StandardFuture<T> selfType, final Class<E> exceptionType, final Closure closure) {
 		selfType.when exceptionType, new ClosureConsumer<E>(closure)
 	}
 
-	static <T> Promise<T> onError(final Promise<T> selfType, final Closure closure) {
+	static <T> StandardPromise<T> onError(final StandardPromise<T> selfType, final Closure closure) {
 		selfType.onError new ClosureConsumer<Throwable>(closure)
 	}
 
-	static <T> Promise<T> onComplete(final Promise<T> selfType, final Closure closure) {
-		selfType.onComplete new ClosureConsumer<Promise<T>>(closure)
+	static <T> StandardPromise<T> onComplete(final StandardPromise<T> selfType, final Closure closure) {
+		selfType.onComplete new ClosureConsumer<StandardPromise<T>>(closure)
 	}
 
-	static <T> Promise<T> onSuccess(final Promise<T> selfType, final Closure closure) {
+	static <T> StandardPromise<T> onSuccess(final StandardPromise<T> selfType, final Closure closure) {
 		selfType.onSuccess new ClosureConsumer<T>(closure)
 	}
 
-	static <T, V> Promise<V> then(final Promise<T> selfType, final Closure<V> closureSuccess,
+	static <T, V> StandardPromise<V> then(final StandardPromise<T> selfType, final Closure<V> closureSuccess,
 	                              final Closure closureError = null) {
 		selfType.then(new ClosureFunction<T, V>(closureSuccess), closureError ?
 				new ClosureConsumer<Throwable>(closureError) : null)
@@ -90,7 +90,7 @@ class FutureExtensions {
 	 * Operator overloading
 	 */
 
-	static <T> Stream<T> leftShift(final Stream<T> selfType, final Consumer<T> other) {
+	static <T> StandardStream<T> leftShift(final StandardStream<T> selfType, final Consumer<T> other) {
 		selfType.consume other
 	}
 
@@ -98,11 +98,11 @@ class FutureExtensions {
 		selfType.onSuccess other
 	}
 
-	static <T, V> Stream<V> mod(final Stream<T> selfType, final Function<Reduce<T, V>, V> other) {
+	static <T, V> StandardStream<V> mod(final StandardStream<T> selfType, final Function<Reduction<T, V>, V> other) {
 		selfType.reduce other
 	}
 
-	static <T, V> Future<V> or(final Future<T> selfType, final Function<T, V> other) {
+	static <T, V> StandardFuture<V> or(final StandardFuture<T> selfType, final Function<T, V> other) {
 		selfType.map other
 	}
 
@@ -110,7 +110,7 @@ class FutureExtensions {
 		selfType.then other,(Consumer<Throwable>) null
 	}
 
-	static <T, V> Stream<V> and(final Stream<T> selfType, final Function<T, Boolean> other) {
+	static <T, V> StandardStream<V> and(final StandardStream<T> selfType, final Function<T, Boolean> other) {
 		selfType.filter other
 	}
 

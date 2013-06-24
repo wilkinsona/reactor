@@ -21,7 +21,7 @@ import reactor.R;
 import reactor.S;
 import reactor.core.Environment;
 import reactor.core.Reactor;
-import reactor.core.Stream;
+import reactor.core.StandardStream;
 import reactor.fn.Consumer;
 import reactor.fn.Event;
 import reactor.fn.Function;
@@ -87,8 +87,8 @@ public abstract class AbstractTcpConnection<IN, OUT> implements TcpConnection<IN
 
 
 	@Override
-	public Stream<IN> in() {
-		Stream<IN> c = S.<IN>defer()
+	public StandardStream<IN> in() {
+		StandardStream<IN> c = S.<IN>defer()
 										.using(env)
 										.using(eventsReactor.getDispatcher())
 										.get();
@@ -97,8 +97,8 @@ public abstract class AbstractTcpConnection<IN, OUT> implements TcpConnection<IN
 	}
 
 	@Override
-	public Stream<OUT> out() {
-		Stream<OUT> s = S.<OUT>defer()
+	public StandardStream<OUT> out() {
+		StandardStream<OUT> s = S.<OUT>defer()
 										 .using(env)
 										 .using(eventsReactor.getDispatcher())
 										 .get();
@@ -134,7 +134,7 @@ public abstract class AbstractTcpConnection<IN, OUT> implements TcpConnection<IN
 	}
 
 	@Override
-	public TcpConnection<IN, OUT> send(Stream<OUT> data) {
+	public TcpConnection<IN, OUT> send(StandardStream<OUT> data) {
 		data.consume(new Consumer<OUT>() {
 			@Override
 			public void accept(OUT out) {

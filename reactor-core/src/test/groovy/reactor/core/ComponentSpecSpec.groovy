@@ -50,7 +50,7 @@ class ComponentSpecSpec extends Specification {
 		composable.accept('test')
 
 		then:
-		Stream.isAssignableFrom(composable.class)
+		StandardStream.isAssignableFrom(composable.class)
 		composable.get() == 'test'
 
 	}
@@ -61,7 +61,7 @@ class ComponentSpecSpec extends Specification {
 		def promise = P.success('test').sync().get()
 
 		then:
-		Promise.isAssignableFrom(promise.class)
+		StandardPromise.isAssignableFrom(promise.class)
 		promise.get() == 'test'
 
 	}

@@ -68,20 +68,20 @@ public abstract class TcpClient<IN, OUT> {
 	}
 
 	/**
-	 * Open a {@link TcpConnection} to the configured host:port and return a {@link Promise} that will be fulfilled when
+	 * Open a {@link TcpConnection} to the configured host:port and return a {@link StandardPromise} that will be fulfilled when
 	 * the client is connected.
 	 *
-	 * @return A {@link Promise} that will be filled with the {@link TcpConnection} when connected.
+	 * @return A {@link StandardPromise} that will be filled with the {@link TcpConnection} when connected.
 	 */
-	public abstract Promise<TcpConnection<IN, OUT>> open();
+	public abstract StandardPromise<TcpConnection<IN, OUT>> open();
 
 	/**
 	 * Close any open connections and disconnect this client.
 	 *
-	 * @return A {@link Promise} that will be fulfilled with {@literal null} when the connections have been closed.
+	 * @return A {@link StandardPromise} that will be fulfilled with {@literal null} when the connections have been closed.
 	 */
-	public Promise<Void> close() {
-		final Promise<Void> p = Promises.<Void>defer().using(env).using(reactor).get();
+	public StandardPromise<Void> close() {
+		final StandardPromise<Void> p = Promises.<Void>defer().using(env).using(reactor).get();
 		Fn.schedule(
 				new Consumer<Void>() {
 					@Override
@@ -197,7 +197,7 @@ public abstract class TcpClient<IN, OUT> {
 		return codec;
 	}
 
-	protected abstract void doClose(Promise<Void> promise);
+	protected abstract void doClose(StandardPromise<Void> promise);
 
 	public static class Spec<IN, OUT> extends ComponentSpec<Spec<IN, OUT>, TcpClient<IN, OUT>> {
 		private final Constructor<? extends TcpClient<IN, OUT>> clientImplConstructor;

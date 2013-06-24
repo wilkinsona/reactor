@@ -22,7 +22,7 @@ package reactor.groovy.ext
 
 import groovy.transform.CompileStatic
 import reactor.core.Reactor
-import reactor.core.Stream
+import reactor.core.StandardStream
 import reactor.fn.*
 import reactor.fn.registry.Registration;
 import reactor.fn.selector.Selector
@@ -72,7 +72,7 @@ class ObservableExtensions {
 		selfType.on new ClosureEventConsumer(handler)
 	}
 
-	static <V> Stream<V> map(Reactor selfType,
+	static <V> StandardStream<V> map(Reactor selfType,
 	                             final String key,
 	                             @DelegatesTo(value = ClosureEventFunction, strategy = Closure.DELEGATE_FIRST)
 	                             Closure<V> handler) {

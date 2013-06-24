@@ -29,7 +29,7 @@ import javax.annotation.Nullable;
 
 import reactor.core.ComponentSpec;
 import reactor.core.Environment;
-import reactor.core.Promise;
+import reactor.core.StandardPromise;
 import reactor.core.Reactor;
 import reactor.fn.Consumer;
 import reactor.fn.Event;
@@ -107,7 +107,7 @@ public abstract class TcpServer<IN, OUT> {
 	 *
 	 * @return a Promise that will be completed with the shutdown outcome
 	 */
-	public abstract Promise<Void> shutdown();
+	public abstract StandardPromise<Void> shutdown();
 
 	/**
 	 * Subclasses should register the given channel and connection for later use.

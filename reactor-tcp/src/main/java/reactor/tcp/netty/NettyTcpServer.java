@@ -40,7 +40,7 @@ import org.slf4j.LoggerFactory;
 
 import reactor.Fn;
 import reactor.core.Environment;
-import reactor.core.Promise;
+import reactor.core.StandardPromise;
 import reactor.core.Promises;
 import reactor.core.Reactor;
 import reactor.fn.Consumer;
@@ -133,8 +133,8 @@ public class NettyTcpServer<IN, OUT> extends TcpServer<IN, OUT> {
 	}
 
 	@Override
-	public Promise<Void> shutdown() {
-		final Promise<Void> p = Promises.<Void>defer().using(env).using(getReactor()).get();
+	public StandardPromise<Void> shutdown() {
+		final StandardPromise<Void> p = Promises.<Void>defer().using(env).using(getReactor()).get();
 		Fn.schedule(
 				new Consumer<Void>() {
 					@SuppressWarnings({ "rawtypes", "unchecked" })

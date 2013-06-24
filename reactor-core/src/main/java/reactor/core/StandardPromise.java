@@ -28,25 +28,25 @@ import reactor.util.Assert;
 import java.util.*;
 
 /**
- * A {@literal Promise} is a {@link Stream} that can only be used once. When created, it is pending. If a value of
+ * A {@literal Promise} is a {@link StandardStream} that can only be used once. When created, it is pending. If a value of
  * type {@link Throwable} is set, then the {@literal Promise} is completed {@link #isError in error} and the error
  * handlers are called. If a value of type <code>&lt;T&gt;</code> is set instead, the {@literal Promise} is completed
  * {@link #isSuccess successfully}.
  * <p/>
- * Calls to {@link reactor.core.Promise#get()} are always non-blocking. If it is desirable to block the calling thread
- * until a result is available, though, call the {@link Promise#await(long, java.util.concurrent.TimeUnit)} method.
+ * Calls to {@link reactor.core.StandardPromise#get()} are always non-blocking. If it is desirable to block the calling thread
+ * until a result is available, though, call the {@link StandardPromise#await(long, java.util.concurrent.TimeUnit)} method.
  *
- * @param <T> The {@link Promise} output type.
+ * @param <T> The {@link StandardPromise} output type.
  *
  * @author Jon Brisbin
  * @author Stephane Maldini
  * @author Andy Wilkinson
  */
-public class Promise<T> extends Composable<T> {
+public class StandardPromise<T> extends StandardComposable<T> {
 
 	private final Logger log = LoggerFactory.getLogger(getClass());
 
-	Promise(Environment env, Observable src) {
+	StandardPromise(Environment env, Observable src) {
 		super(env, src);
 		setExpectedAcceptCount(1);
 		getObservable().on(Functions.T(Throwable.class), new Consumer<Event<Throwable>>() {
@@ -54,7 +54,7 @@ public class Promise<T> extends Composable<T> {
 			public void accept(Event<Throwable> throwableEvent) {
 				synchronized (monitor) {
 					if (!isComplete()) {
-						Promise.this.set(throwableEvent.getData());
+						StandardPromise.this.set(throwableEvent.getData());
 					} else {
 						log.error(throwableEvent.getData().getMessage(), throwableEvent.getData());
 					}
@@ -65,13 +65,13 @@ public class Promise<T> extends Composable<T> {
 
 
 	/**
-	 * Set the value of the {@literal Promise} so that subsequent calls to {@link reactor.core.Promise#get()} will throw
+	 * Set the value of the {@literal Promise} so that subsequent calls to {@link reactor.core.StandardPromise#get()} will throw
 	 * this exception instead of returning a value.
 	 *
 	 * @param error The exception to use.
 	 * @return {@literal this}
 	 */
-	public Promise<T> set(Throwable error) {
+	public StandardPromise<T> set(Throwable error) {
 		synchronized (monitor) {
 			assertPending();
 			super.accept(error);
@@ -85,7 +85,7 @@ public class Promise<T> extends Composable<T> {
 	 * @param value The value to set.
 	 * @return {@literal this}
 	 */
-	public Promise<T> set(T value) {
+	public StandardPromise<T> set(T value) {
 		synchronized (monitor) {
 			assertPending();
 			super.accept(value);
@@ -100,18 +100,18 @@ public class Promise<T> extends Composable<T> {
 	 * @param onComplete The {@link Consumer} to invoke on either failure or success.
 	 * @return {@literal this}
 	 */
-	public Promise<T> onComplete(final Consumer<Promise<T>> onComplete) {
+	public StandardPromise<T> onComplete(final Consumer<StandardPromise<T>> onComplete) {
 		Assert.notNull(onComplete);
 		onSuccess(new Consumer<T>() {
 			@Override
 			public void accept(T t) {
-				onComplete.accept(Promise.this);
+				onComplete.accept(StandardPromise.this);
 			}
 		});
 		onError(new Consumer<Throwable>() {
 			@Override
 			public void accept(Throwable t) {
-				onComplete.accept(Promise.this);
+				onComplete.accept(StandardPromise.this);
 			}
 		});
 		return this;
@@ -123,7 +123,7 @@ public class Promise<T> extends Composable<T> {
 	 * @param onSuccess The {@link Consumer} to invoke on success.
 	 * @return {@literal this}
 	 */
-	public Promise<T> onSuccess(Consumer<T> onSuccess) {
+	public StandardPromise<T> onSuccess(Consumer<T> onSuccess) {
 		Assert.notNull(onSuccess);
 		consume(onSuccess);
 		return this;
@@ -135,7 +135,7 @@ public class Promise<T> extends Composable<T> {
 	 * @param onError The {@link Consumer} to invoke on failure.
 	 * @return {@literal this}
 	 */
-	public Promise<T> onError(Consumer<Throwable> onError) {
+	public StandardPromise<T> onError(Consumer<Throwable> onError) {
 		Assert.notNull(onError);
 		when(Throwable.class, onError);
 		return this;
@@ -148,7 +148,7 @@ public class Promise<T> extends Composable<T> {
 	 * @param onError   The {@link Consumer} to invoke on failure.
 	 * @return {@literal this}
 	 */
-	public Promise<T> then(Consumer<T> onSuccess, Consumer<Throwable> onError) {
+	public StandardPromise<T> then(Consumer<T> onSuccess, Consumer<Throwable> onError) {
 		if (null != onSuccess) {
 			onSuccess(onSuccess);
 		}
@@ -166,8 +166,8 @@ public class Promise<T> extends Composable<T> {
 	 * @param onError   The {@link Consumer} to invoke on failure.
 	 * @return {@literal this}
 	 */
-	public <V> Promise<V> then(Function<T, V> onSuccess, Consumer<Throwable> onError) {
-		Promise<V> c = map(onSuccess);
+	public <V> StandardPromise<V> then(Function<T, V> onSuccess, Consumer<Throwable> onError) {
+		StandardPromise<V> c = map(onSuccess);
 		if (null != onError) {
 			onError(onError);
 		}
@@ -203,7 +203,7 @@ public class Promise<T> extends Composable<T> {
 	}
 
 	@Override
-	public Promise<T> consume(final Consumer<T> consumer) {
+	public StandardPromise<T> consume(final Consumer<T> consumer) {
 		synchronized (monitor) {
 			if (isError()) {
 				return this;
@@ -211,28 +211,28 @@ public class Promise<T> extends Composable<T> {
 				Functions.schedule(consumer, getValue(), getObservable());
 				return this;
 			} else {
-				return (Promise<T>) super.consume(consumer);
+				return (StandardPromise<T>) super.consume(consumer);
 			}
 		}
 	}
 
 	@Override
-	public Promise<T> consume(Object key, Observable observable) {
+	public StandardPromise<T> consume(Object key, Observable observable) {
 		synchronized (monitor) {
 			if (acceptCountReached()) {
 				observable.notify(key, Event.wrap(getValue()));
 				return this;
 			} else {
-				return (Promise<T>) super.consume(key, observable);
+				return (StandardPromise<T>) super.consume(key, observable);
 			}
 		}
 	}
 
 	@Override
-	public <V> Promise<V> map(final Function<T, V> fn) {
+	public <V> StandardPromise<V> map(final Function<T, V> fn) {
 		synchronized (monitor) {
 			if (acceptCountReached()) {
-				final Promise<V> c = (Promise<V>) this.assignComposable(getObservable());
+				final StandardPromise<V> c = (StandardPromise<V>) this.assignComposable(getObservable());
 				Functions.schedule(new Consumer<T>() {
 					@Override
 					public void accept(T value) {
@@ -245,7 +245,7 @@ public class Promise<T> extends Composable<T> {
 				}, getValue(), getObservable());
 				return c;
 			} else {
-				return (Promise<V>) super.map(fn);
+				return (StandardPromise<V>) super.map(fn);
 			}
 		}
 	}
@@ -253,9 +253,9 @@ public class Promise<T> extends Composable<T> {
 
 
 	@Override
-	public Promise<T> filter(final Function<T, Boolean> fn) {
+	public StandardPromise<T> filter(final Function<T, Boolean> fn) {
 		synchronized (monitor) {
-			final Promise<T> p = createFuture(getObservable());
+			final StandardPromise<T> p = createFuture(getObservable());
 
 			Consumer<T> consumer = new Consumer<T>() {
 				@Override
@@ -282,8 +282,8 @@ public class Promise<T> extends Composable<T> {
 	}
 
 	@Override
-	public <E extends Throwable> Promise<T> when(Class<E> exceptionType, Consumer<E> onError) {
-		return (Promise<T>)super.when(exceptionType, onError);
+	public <E extends Throwable> StandardPromise<T> when(Class<E> exceptionType, Consumer<E> onError) {
+		return (StandardPromise<T>)super.when(exceptionType, onError);
 	}
 
 	@Override
@@ -297,8 +297,8 @@ public class Promise<T> extends Composable<T> {
 	}
 
 	@Override
-	protected <U> Promise<U> createFuture(Observable src) {
-		final Promise<U> p = new Promise<U>(getEnvironment(), src);
+	protected <U> StandardPromise<U> createFuture(Observable src) {
+		final StandardPromise<U> p = new StandardPromise<U>(getEnvironment(), src);
 		forwardError(p);
 		return p;
 	}
@@ -313,7 +313,7 @@ public class Promise<T> extends Composable<T> {
 
 
 	@SuppressWarnings("unchecked")
-	protected Promise<T> merge(Collection<? extends Composable<?>> composables) {
+	protected StandardPromise<T> merge(Collection<? extends StandardComposable<?>> composables) {
 
 		final int size = composables.size();
 		if (size < 1) {
@@ -322,14 +322,14 @@ public class Promise<T> extends Composable<T> {
 			composables.iterator().next().consume(new Consumer() {
 				@Override
 				public void accept(Object t) {
-					Promise.this.accept((T) Arrays.asList(t));
+					StandardPromise.this.accept((T) Arrays.asList(t));
 				}
 			});
 			return this;
 		}
 
-		final Stream<Tuple2<?, Integer>> reducer =
-				new Stream.DeferredStream<Tuple2<?, Integer>>(getEnvironment(), getObservable(), size);
+		final StandardStream<Tuple2<?, Integer>> reducer =
+				new StandardStream.DeferredStream<Tuple2<?, Integer>>(getEnvironment(), getObservable(), size);
 		reducer
 				.reduce()
 				.map(new Function<List<Tuple2<?, Integer>>, T>() {
@@ -358,10 +358,10 @@ public class Promise<T> extends Composable<T> {
 			}
 		};
 
-		for (final Composable c : composables) {
+		for (final StandardComposable c : composables) {
 			c.forwardError(reducer).consume(consumer);
-			if (Stream.DeferredStream.class.isInstance(c)) {
-				((Stream.DeferredStream) c).delayedAccept();
+			if (StandardStream.DeferredStream.class.isInstance(c)) {
+				((StandardStream.DeferredStream) c).delayedAccept();
 			}
 		}
 
@@ -369,18 +369,18 @@ public class Promise<T> extends Composable<T> {
 	}
 
 	/**
-	 * Build a {@link Stream} based on the given values, {@link Dispatcher dispatcher}, and {@link Reactor reactor}.
+	 * Build a {@link StandardStream} based on the given values, {@link Dispatcher dispatcher}, and {@link Reactor reactor}.
 	 *
 	 * @param <T> The type of the values.
 	 */
-	public static class Spec<T> extends ComponentSpec<Spec<T>, Promise<T>> {
+	public static class Spec<T> extends ComponentSpec<Spec<T>, StandardPromise<T>> {
 
 		protected final T                                   value;
 		protected final Throwable                           error;
 		protected final Supplier<T>                         supplier;
-		protected final Collection<? extends Composable<?>> mergeWith;
+		protected final Collection<? extends StandardComposable<?>> mergeWith;
 
-		public Spec(T value, Supplier<T> supplier, Throwable error, Collection<? extends Composable<?>> composables) {
+		public Spec(T value, Supplier<T> supplier, Throwable error, Collection<? extends StandardComposable<?>> composables) {
 			this.value = value;
 			this.supplier = supplier;
 			this.error = error;
@@ -388,12 +388,12 @@ public class Promise<T> extends Composable<T> {
 		}
 
 		@Override
-		protected Promise<T> configure(Reactor reactor) {
-			final Promise<T> prom;
+		protected StandardPromise<T> configure(Reactor reactor) {
+			final StandardPromise<T> prom;
 			if (null != error) {
-				prom = new Promise<T>(env, reactor).set(error);
+				prom = new StandardPromise<T>(env, reactor).set(error);
 			} else if (supplier != null) {
-				prom = new Promise<T>(env, reactor);
+				prom = new StandardPromise<T>(env, reactor);
 				Functions.schedule(new Consumer<Object>() {
 					@Override
 					public void accept(Object o) {
@@ -405,9 +405,9 @@ public class Promise<T> extends Composable<T> {
 					}
 				}, null, reactor);
 			} else if (null != value) {
-				prom = new Promise<T>(env, reactor).set(value);
+				prom = new StandardPromise<T>(env, reactor).set(value);
 			} else {
-				prom = new Promise<T>(env, reactor);
+				prom = new StandardPromise<T>(env, reactor);
 				if (null != mergeWith) {
 					prom.merge(mergeWith);
 				}
@@ -418,7 +418,7 @@ public class Promise<T> extends Composable<T> {
 
 
 	/**
-	 * A {@code FilteredException} is used to {@link Promise#set(Throwable) complete} a {@link Promise#filter(Function)
+	 * A {@code FilteredException} is used to {@link StandardPromise#set(Throwable) complete} a {@link StandardPromise#filter(Function)
 	 * filtered promise} when the filter rejects the value.
 	 *
 	 * @author Andy Wilkinson

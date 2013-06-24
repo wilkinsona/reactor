@@ -23,7 +23,7 @@ import reactor.S;
 import reactor.R;
 import reactor.fn.*;
 import reactor.fn.selector.Selector;
-import reactor.fn.support.Reduce;
+import reactor.fn.support.Reduction;
 import reactor.fn.tuples.Tuple2;
 
 import java.util.Arrays;
@@ -46,9 +46,9 @@ public class ComposableTests extends AbstractReactorTest {
 
 	@Test
 	public void testComposeFromSingleValue() throws InterruptedException {
-		Stream<String> c = Streams.defer("Hello World!").get();
+		StandardStream<String> c = Streams.defer("Hello World!").get();
 
-		Stream<String> d = c.map(new Function<String, String>() {
+		StandardStream<String> d = c.map(new Function<String, String>() {
 			@Override
 			public String apply(String s) {
 				return "Goodbye then!";
@@ -60,7 +60,7 @@ public class ComposableTests extends AbstractReactorTest {
 
 	@Test
 	public void testComposeFromMultipleValues() throws InterruptedException {
-		Stream<Integer> c = S
+		StandardStream<Integer> c = S
 				.each(Arrays.asList("1", "2", "3", "4", "5"))
 				.get()
 				.map(STRING_2_INTEGER)
@@ -78,7 +78,7 @@ public class ComposableTests extends AbstractReactorTest {
 
 	@Test
 	public void testComposeFromMultipleFilteredValues() throws InterruptedException {
-		Stream<Integer> c = S
+		StandardStream<Integer> c = S
 				.each(Arrays.asList("1", "2", "3", "4", "5"))
 				.get()
 				.map(STRING_2_INTEGER)
@@ -96,7 +96,7 @@ public class ComposableTests extends AbstractReactorTest {
 
 	@Test
 	public void testComposedErrorHandlingWithMultipleValues() throws InterruptedException {
-		Stream<Integer> c = S
+		StandardStream<Integer> c = S
 				.each(Arrays.asList("1", "2", "3", "4", "5"))
 				.using(env)
 				.dispatcher("eventLoop")
@@ -120,21 +120,21 @@ public class ComposableTests extends AbstractReactorTest {
 
 	@Test
 	public void valueIsImmediatelyAvailable() throws InterruptedException {
-		Stream<String> c = S.each(Arrays.asList("1", "2", "3", "4", "5")).get();
+		StandardStream<String> c = S.each(Arrays.asList("1", "2", "3", "4", "5")).get();
 
 		await(c, is("5"));
 	}
 
 	@Test
 	public void testReduce() throws InterruptedException {
-		Stream<Integer> c = S
+		StandardStream<Integer> c = S
 				.each(Arrays.asList("1", "2", "3", "4", "5"))
 				.get()
 				.map(STRING_2_INTEGER)
-				.reduce(new Function<Reduce<Integer, Integer>, Integer>() {
+				.reduce(new Function<Reduction<Integer, Integer>, Integer>() {
 					@Override
-					public Integer apply(Reduce<Integer, Integer> r) {
-						return ((null != r.getLastValue() ? r.getLastValue() : 1) * r.getNextValue());
+					public Integer apply(Reduction<Integer, Integer> r) {
+						return ((null != r.getReducedValue() ? r.getReducedValue() : 1) * r.getNextValue());
 					}
 				});
 
@@ -143,13 +143,13 @@ public class ComposableTests extends AbstractReactorTest {
 
 	@Test
 	public void testFirstAndLast() throws InterruptedException {
-		Stream<Integer> c = S
+		StandardStream<Integer> c = S
 				.each(Arrays.asList("1", "2", "3", "4", "5"))
 				.get()
 				.map(STRING_2_INTEGER);
 
-		Stream<Integer> first = c.first();
-		Stream<Integer> last = c.last();
+		StandardStream<Integer> first = c.first();
+		StandardStream<Integer> last = c.last();
 
 		await(first, is(1));
 		await(last, is(5));
@@ -168,7 +168,7 @@ public class ComposableTests extends AbstractReactorTest {
 			}
 		});
 
-		Stream<Integer> c = S
+		StandardStream<Integer> c = S
 				.each(Arrays.asList("1", "2", "3", "4", "5"))
 				.get()
 				.map(STRING_2_INTEGER)
@@ -183,7 +183,7 @@ public class ComposableTests extends AbstractReactorTest {
 
 	@Test
 	public void composableWithInitiallyUnknownNumberOfValues() throws InterruptedException {
-		final Stream<Integer> c = S
+		final StandardStream<Integer> c = S
 				.each(new TestIterable<String>("1", "2", "3", "4", "5"))
 				.get()
 				.map(STRING_2_INTEGER)
@@ -212,7 +212,7 @@ public class ComposableTests extends AbstractReactorTest {
 		await(c, is(15));
 	}
 
-	<T> void await(Stream<T> d, Matcher<T> expected) throws InterruptedException {
+	<T> void await(StandardStream<T> d, Matcher<T> expected) throws InterruptedException {
 		long startTime = System.currentTimeMillis();
 		T result = null;
 		try {

@@ -263,7 +263,7 @@ class PromiseSpec extends Specification {
 
 	def "An onSuccess consumer registered via then is called when the promise is fulfilled"() {
 		given: "A promise with an onSuccess consumer registered using then"
-		Promise<String> promise = Promises.<String> defer().sync().get()
+		StandardPromise<String> promise = Promises.<String> defer().sync().get()
 		def value = null
 		promise.then(consumer { value = it }, null)
 
@@ -276,7 +276,7 @@ class PromiseSpec extends Specification {
 
 	def "An onError consumer registered via then is called when the promise is rejected"() {
 		given: "A promise with an onError consumer registered using then"
-		Promise<String> promise = Promises.<String> defer().sync().get()
+		StandardPromise<String> promise = Promises.<String> defer().sync().get()
 		def value
 		promise.then(null, consumer { value = it })
 
@@ -291,7 +291,7 @@ class PromiseSpec extends Specification {
 	def "An onError consumer registered via then is called when the promise is already rejected"() {
 		given: "A promise that has been rejected"
 		def e = new Exception()
-		Promise<String> promise = Promises.<String> error(e).sync().get()
+		StandardPromise<String> promise = Promises.<String> error(e).sync().get()
 
 		when: "An onError consumer is registered via then"
 		def value
@@ -315,7 +315,7 @@ class PromiseSpec extends Specification {
 
 	def "An onSuccess function registered via then is called when the promise is fulfilled"() {
 		given: "a promise with an onSuccess function registered using then"
-		Promise<String> promise = Promises.<String> defer().sync().get()
+		StandardPromise<String> promise = Promises.<String> defer().sync().get()
 		def transformed = promise.then(function { it * 2 }, null)
 
 		when: "the promise is fulfilled"
@@ -340,7 +340,7 @@ class PromiseSpec extends Specification {
 
 	def "When a promise is fulfilled, if a mapping function throws an exception the mapped promise is rejected"() {
 		given: "a promise with a filter that throws an exception"
-		Promise<String> promise = Promises.<String> defer().sync().get()
+		StandardPromise<String> promise = Promises.<String> defer().sync().get()
 		def e = new RuntimeException()
 		def mapped = promise.map(function { throw e })
 
@@ -573,11 +573,11 @@ class PromiseSpec extends Specification {
 
 	def "Errors stop compositions"() {
 		given: "a promise"
-		Promise<String> p = P.<String>defer().using(new Environment()).dispatcher('eventLoop').get()
+		StandardPromise<String> p = P.<String>defer().using(new Environment()).dispatcher('eventLoop').get()
 		final latch = new CountDownLatch(1)
 
 		when: "p1 is consumed by p2"
-		Promise s = p.then(function{ Integer.parseInt it }, null).
+		StandardPromise s = p.then(function{ Integer.parseInt it }, null).
 				when (NumberFormatException, consumer{ latch.countDown() }).
 				then(function{ println('not in log'); true }, null)
 

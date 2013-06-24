@@ -22,31 +22,31 @@ import java.util.Arrays;
 import java.util.Collection;
 
 /**
- * A public factory to build {@link Promise}
+ * A public factory to build {@link StandardPromise}
  *
  * @author Stephane Maldini
  */
 public abstract class Promises {
 	/**
-	 * Create an empty {@link reactor.core.Promise}.
+	 * Create an empty {@link reactor.core.StandardPromise}.
 	 *
-	 * @param <T> The type of the object to be set on the {@link reactor.core.Promise}.
-	 * @return The new {@link reactor.core.Promise}.
+	 * @param <T> The type of the object to be set on the {@link reactor.core.StandardPromise}.
+	 * @return The new {@link reactor.core.StandardPromise}.
 	 */
-	public static <T> Promise.Spec<T> defer() {
-		return new Promise.Spec<T>(null, null, null, null);
+	public static <T> StandardPromise.Spec<T> defer() {
+		return new StandardPromise.Spec<T>(null, null, null, null);
 	}
 
 	/**
-	 * Create a new {@link reactor.core.Promise} based on the given {@link Throwable}.
+	 * Create a new {@link reactor.core.StandardPromise} based on the given {@link Throwable}.
 	 *
 	 * @param reason The exception to set.
-	 * @param <T>    The type of the expected {@link reactor.core.Promise}.
-	 * @return The new {@link reactor.core.Promise}.
+	 * @param <T>    The type of the expected {@link reactor.core.StandardPromise}.
+	 * @return The new {@link reactor.core.StandardPromise}.
 	 */
 	@SuppressWarnings("unchecked")
-	public static <T> Promise.Spec<T> error(Throwable reason) {
-		return (Promise.Spec<T>) new Promise.Spec<Throwable>(null, null, reason, null);
+	public static <T> StandardPromise.Spec<T> error(Throwable reason) {
+		return (StandardPromise.Spec<T>) new StandardPromise.Spec<Throwable>(null, null, reason, null);
 	}
 
 	/**
@@ -54,11 +54,11 @@ public abstract class Promises {
 	 *
 	 * @param value The value to use.
 	 * @param <T>   The type of the value.
-	 * @return a {@link reactor.core.Promise.Spec}.
+	 * @return a {@link reactor.core.StandardPromise.Spec}.
 	 */
 	@SuppressWarnings("unchecked")
-	public static <T> Promise.Spec<T> success(T value) {
-		return new Promise.Spec<T>(value, null, null, null);
+	public static <T> StandardPromise.Spec<T> success(T value) {
+		return new StandardPromise.Spec<T>(value, null, null, null);
 	}
 
 	/**
@@ -66,10 +66,10 @@ public abstract class Promises {
 	 *
 	 * @param supplier The value to use.
 	 * @param <T>      The type of the function result.
-	 * @return a {@link reactor.core.Promise.Spec}.
+	 * @return a {@link reactor.core.StandardPromise.Spec}.
 	 */
-	public static <T> Promise.Spec<T> task(Supplier<T> supplier) {
-		return new Promise.Spec<T>(null, supplier, null, null);
+	public static <T> StandardPromise.Spec<T> task(Supplier<T> supplier) {
+		return new StandardPromise.Spec<T>(null, supplier, null, null);
 	}
 
 	/**
@@ -77,9 +77,9 @@ public abstract class Promises {
 	 *
 	 * @param composables The composables to use.
 	 * @param <T>         The type of the function result.
-	 * @return a {@link reactor.core.Promise.Spec}.
+	 * @return a {@link reactor.core.StandardPromise.Spec}.
 	 */
-	public static <T> Promise.Spec<Collection<T>> when(Composable<T>... composables) {
+	public static <T> StandardPromise.Spec<Collection<T>> when(StandardComposable<T>... composables) {
 		return when(Arrays.asList(composables));
 	}
 
@@ -88,9 +88,9 @@ public abstract class Promises {
 	 *
 	 * @param composables The composables to use.
 	 * @param <T>         The type of the function result.
-	 * @return a {@link reactor.core.Promise.Spec}.
+	 * @return a {@link reactor.core.StandardPromise.Spec}.
 	 */
-	public static <T> Promise.Spec<Collection<T>> when(Collection<? extends Composable<T>> composables) {
-		return new Promise.Spec<Collection<T>>(null, null, null, composables);
+	public static <T> StandardPromise.Spec<Collection<T>> when(Collection<? extends StandardComposable<T>> composables) {
+		return new StandardPromise.Spec<Collection<T>>(null, null, null, composables);
 	}
 }

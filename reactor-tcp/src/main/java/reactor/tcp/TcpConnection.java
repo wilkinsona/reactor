@@ -16,7 +16,7 @@
 
 package reactor.tcp;
 
-import reactor.core.Stream;
+import reactor.core.StandardStream;
 import reactor.fn.Consumer;
 import reactor.fn.Function;
 
@@ -56,11 +56,11 @@ public interface TcpConnection<IN, OUT> {
 	InetSocketAddress remoteAddress();
 
 	/**
-	 * Get the {@link Stream} of data coming in.
+	 * Get the {@link StandardStream} of data coming in.
 	 *
-	 * @return The incoming data, as a {@link Stream}.
+	 * @return The incoming data, as a {@link StandardStream}.
 	 */
-	Stream<IN> in();
+	StandardStream<IN> in();
 
 	/**
 	 * Get a {@link Consumer} for output. To send data to the output using this {@link Consumer}, the caller invokes the
@@ -88,13 +88,13 @@ public interface TcpConnection<IN, OUT> {
 	TcpConnection<IN, OUT> receive(Function<IN, OUT> fn);
 
 	/**
-	 * Send data on this connection as a {@link Stream}. The implementation is expected to place a {@link Consumer} on this
-	 * {@link Stream} to handle data coming in.
+	 * Send data on this connection as a {@link StandardStream}. The implementation is expected to place a {@link Consumer} on this
+	 * {@link StandardStream} to handle data coming in.
 	 *
-	 * @param data The outgoing data as a {@link Stream}.
+	 * @param data The outgoing data as a {@link StandardStream}.
 	 * @return {@literal this}
 	 */
-	TcpConnection<IN, OUT> send(Stream<OUT> data);
+	TcpConnection<IN, OUT> send(StandardStream<OUT> data);
 
 	/**
 	 * Send data on this connection. The current codec (if any) will be used to encode the data to a {@link

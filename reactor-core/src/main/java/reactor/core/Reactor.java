@@ -275,13 +275,13 @@ public class Reactor implements Observable, Linkable<Observable> {
 	 * @param function The {@literal Function} to be triggered.
 	 * @param <T>      The type of the data in the {@link Event}.
 	 * @param <V>      The type of the return value when the given {@link Function}.
-	 * @return A {@link Stream} object that allows the caller to interact with the given mapping.
+	 * @return A {@link StandardStream} object that allows the caller to interact with the given mapping.
 	 */
-	public <T, E extends Event<T>, V> Stream<V> map(Selector sel, final Function<E, V> function) {
+	public <T, E extends Event<T>, V> StandardStream<V> map(Selector sel, final Function<E, V> function) {
 		Assert.notNull(sel, "Selector cannot be null.");
 		Assert.notNull(function, "Function cannot be null.");
 
-		final Stream<V> c = Streams.<V>defer().using(env).using(this).get();
+		final StandardStream<V> c = Streams.<V>defer().using(env).using(this).get();
 		on(sel, new Consumer<E>() {
 			@Override
 			public void accept(E event) {
@@ -305,7 +305,7 @@ public class Reactor implements Observable, Linkable<Observable> {
 	 * @param <V>      The type of the return value when the given {@link Function}.
 	 * @return A {@link Registration} object that allows the caller to interact with the given mapping.
 	 */
-	public <T, E extends Event<T>, V> Stream<V> map(Function<E, V> function) {
+	public <T, E extends Event<T>, V> StandardStream<V> map(Function<E, V> function) {
 		Assert.notNull(function, "Function cannot be null.");
 		return map(defaultSelector, function);
 	}
@@ -317,9 +317,9 @@ public class Reactor implements Observable, Linkable<Observable> {
 	 *
 	 * @param key The notification key
 	 * @param ev  The {@link Event} to publish.
-	 * @return {@link Stream}
+	 * @return {@link StandardStream}
 	 */
-	public <T, E extends Event<T>, V> Stream<V> compose(Object key, E ev) {
+	public <T, E extends Event<T>, V> StandardStream<V> compose(Object key, E ev) {
 		return Streams.defer(ev).using(env).using(this).get().map(key, this);
 	}
 
@@ -329,11 +329,11 @@ public class Reactor implements Observable, Linkable<Observable> {
 	 *
 	 * @param key      The notification key
 	 * @param ev       The {@link Event} to publish.
-	 * @param consumer The {@link Stream} to pass the replies.
+	 * @param consumer The {@link StandardStream} to pass the replies.
 	 * @return {@literal this}
 	 */
 	public <T, E extends Event<T>, V> Reactor compose(Object key, E ev, Consumer<V> consumer) {
-		Stream<E> composable = Streams.defer(ev).using(env).using(this).get();
+		StandardStream<E> composable = Streams.defer(ev).using(env).using(this).get();
 		composable.<V>map(key, this).consume(consumer);
 		composable.get();
 
@@ -347,10 +347,10 @@ public class Reactor implements Observable, Linkable<Observable> {
 	 * @param supplier The {@link Supplier} that will provide the actual {@link Event} instance.
 	 * @param <T>      The type of the incoming data.
 	 * @param <S>      The type of the event supplier.
-	 * @param <V>      The type of the {@link Stream}.
-	 * @return A new {@link Stream}.
+	 * @param <V>      The type of the {@link StandardStream}.
+	 * @return A new {@link StandardStream}.
 	 */
-	public <T, S extends Supplier<Event<T>>, V> Stream<V> compose(Object key, S supplier) {
+	public <T, S extends Supplier<Event<T>>, V> StandardStream<V> compose(Object key, S supplier) {
 		return compose(key, supplier.get());
 	}
 
@@ -363,8 +363,8 @@ public class Reactor implements Observable, Linkable<Observable> {
 	 * @param consumer The {@link Consumer} that will consume replies.
 	 * @param <T>      The type of the incoming data.
 	 * @param <S>      The type of the event supplier.
-	 * @param <V>      The type of the {@link Stream}.
-	 * @return A new {@link Stream}.
+	 * @param <V>      The type of the {@link StandardStream}.
+	 * @return A new {@link StandardStream}.
 	 */
 	public <T, S extends Supplier<Event<T>>, V> Reactor compose(Object key, S supplier, Consumer<V> consumer) {
 		return compose(key, supplier.get(), consumer);

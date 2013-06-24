@@ -1,121 +1,80 @@
-/*
- * Copyright (c) 2011-2013 GoPivotal, Inc. All Rights Reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package reactor.core;
 
+import java.util.concurrent.TimeUnit;
+
 import reactor.fn.Consumer;
+import reactor.fn.Event;
+import reactor.fn.Function;
 import reactor.fn.Observable;
+import reactor.fn.Supplier;
 
-/**
- * A {@literal Composable} is a specific type of {@link Future} implementing {@link Consumer} in order to provide
- * public scoped accept methods. A Composable can push and pull data to other components that must wait on the data to
- * become available.
- *
- * @param <T> The {@link Composable}  output type.
- * @author Stephane Maldini
- */
-public abstract class Composable<T> extends Future<T> implements Consumer<T> {
-
+interface Composable<T, D extends Composable<T, D>> extends Supplier<T> {
 
 	/**
-	 * Create a {@link Composable} that uses the given {@link reactor.core.Reactor} for publishing events internally.
+	 * Registers a {@link Consumer} that will be called to {@link Consumer#accept accept}
+	 * values when they become available.
 	 *
-	 * @param observable The {@link reactor.core.Reactor} to use.
-	 */
-	protected Composable(Environment env, Observable observable) {
-		super(env, observable);
-	}
-
-	/**
-	 * Register a {@link Composable} that will be invoked whenever {@link #accept(Object)} or {@link #accept (Throwable)}
-	 * are called.
+	 * @param consumer The consumer to register
 	 *
-	 * @param composable The composable to invoke.
-	 * @return {@literal this}
-	 * @see {@link #accept(Object)}
+	 * @return {@code this}
 	 */
-	public Composable<T> consume(Composable<T> composable) {
-		consume((Consumer<T>) composable);
-		forwardError(composable);
-		return this;
-	}
-
+	D consume(Consumer<T> consumer);
 
 	/**
-	 * Provide a read-only future that no longer accepts user values
-	 */
-	public Future<T> future() {
-		final Future<T> c = super.createFuture(getObservable());
-		synchronized (monitor) {
-			c.doSetExpectedAcceptCount(getExpectedAcceptCount());
-			if (null != getValue()) {
-				c.setValue(getValue());
-			}
-			if (null != getError()) {
-				c.setError(getError());
-			}
-		}
-		when(Throwable.class, new Consumer<Throwable>() {
-			@Override
-			public void accept(Throwable throwable) {
-				c.internalAccept(throwable);
-			}
-		})
-				.consume(new Consumer<T>() {
-					@Override
-					public void accept(T t) {
-						c.internalAccept(t);
-					}
-				});
-		return c;
-	}
-
-	/**
-	 * Trigger composition with an exception to be processed by dedicated consumers
+	 * Registers an {@link Observable} to consume the values from this {@code Composable}. When the
+	 * values become available the {@link Observable} will be {@link Observable#notify(Object, Event)
+	 * notified} using the given {@code key}.
 	 *
-	 * @param error The exception
+	 * @param key The notification key
+	 * @param observable The {@code Observable} to notify
+	 *
+	 * @return {@code this}
 	 */
-	public void accept(Throwable error) {
-		internalAccept(error);
-		notifyError(error);
-	}
+	D consume(Object key, Observable observable);
 
 	/**
-	 * Trigger composition with a value to be processed by dedicated consumers
+	 * Registers a predicate {@link Function} that will be {@link Function#apply(Object) applied}
+	 * to filter the values when they becomes available. Returns a new {@code Composable} that will
+	 * provide access to the filtered values.
 	 *
-	 * @param value The exception
+	 * @param function The filter {@code Function}
+	 *
+	 * @return The new {@code Delayed} that provides access to the filtered values
 	 */
-	@Override
-	public void accept(T value) {
-		internalAccept(value);
-	}
+	D filter(Function<T, Boolean> function);
 
+	/**
+	 * Registers a {@link Consumer} that will be called to {@link Consumer#accept accept} any
+	 * exceptional values that become available and are assignable to {@code exceptionType}.
+	 *
+	 * @param exceptionType The type of the exception
+	 * @param onError The consumer to register
+	 *
+	 * @return {@code this}
+	 */
+	<E extends Throwable> D when(Class<E> exceptionType, Consumer<E> onError);
 
-	protected Composable<T> forwardError(final Composable<?> composable) {
-		if (composable.getObservable() == getObservable()) {
-			return this;
-		}
-		when(Throwable.class, new Consumer<Throwable>() {
-			@Override
-			public void accept(Throwable t) {
-				composable.accept(t);
-				composable.decreaseAcceptLength();
-			}
-		});
-		return this;
-	}
+	/**
+	 * Causes the current thread to wait for a value to become available, unless the thread is {@link
+	 * Thread#interrupt() interrupted} or the default timeout period elapses.
+	 *
+	 * @return The value that became available.
+	 *
+	 * @throws InterruptedException if the current thread is interrupted while waiting for a value
+	 */
+	T await() throws InterruptedException;
+
+	/**
+	 * Causes the current thread to wait for a value to become available, unless the thread is {@link
+	 * Thread#interrupt() interrupted} or the specified timeout period elapses.
+	 *
+	 * @param timeout the timeout period
+	 * @param unit the time unit of the {@code timeout} argument
+	 *
+	 * @return The value that became available.
+	 *
+	 * @throws InterruptedException if the current thread is interrupted while waiting for a value
+	 */
+	T await(long timeout, TimeUnit unit) throws InterruptedException;
 
 }

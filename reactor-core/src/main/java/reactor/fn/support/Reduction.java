@@ -17,39 +17,42 @@
 package reactor.fn.support;
 
 /**
- * A {@link reactor.core.Stream#reduce(reactor.fn.Function)} operation needs a stateful object to pass as the argument,
+ * A {@link reactor.core.StandardStream#reduce(reactor.fn.Function)} operation needs a stateful object to pass as the argument,
  * which contains the
  * last accumulated value, as well as the next, just-accepted value.
  *
- * @param <NEXTVALUE> The type of the input value.
- * @param <LASTVALUE> The type of the accumulated or last value.
+ * @param <VALUE> The type of the values that are being reduced.
+ * @param <REDUCED> The type of the reduced value.
  *
  * @author Stephane Maldini
+ * @author Andy Wilkinson
  */
-public class Reduce<NEXTVALUE, LASTVALUE> {
-	private final LASTVALUE lastValue;
-	private final NEXTVALUE nextValue;
+public class Reduction<VALUE, REDUCED> {
 
-	public Reduce(LASTVALUE lastValue, NEXTVALUE nextValue) {
-		this.lastValue = lastValue;
+	private final REDUCED reducedValue;
+
+	private final VALUE nextValue;
+
+	public Reduction(REDUCED reducedValue, VALUE nextValue) {
+		this.reducedValue = reducedValue;
 		this.nextValue = nextValue;
 	}
 
 	/**
-	 * Get the accumulated value.
+	 * Get the reduced value.
 	 *
-	 * @return
+	 * @return The reduced value
 	 */
-	public LASTVALUE getLastValue() {
-		return lastValue;
+	public REDUCED getReducedValue() {
+		return reducedValue;
 	}
 
 	/**
 	 * Get the next input value.
 	 *
-	 * @return
+	 * @return The next value
 	 */
-	public NEXTVALUE getNextValue() {
+	public VALUE getNextValue() {
 		return nextValue;
 	}
 }

@@ -21,7 +21,7 @@ package reactor.groovy.ext
 import groovy.transform.CompileStatic
 import reactor.Fn
 import reactor.P
-import reactor.core.Promise
+import reactor.core.StandardPromise
 import reactor.core.Promises
 import reactor.fn.Observable
 import reactor.groovy.support.ClosureConsumer
@@ -43,7 +43,7 @@ class ReactorExtensions {
 		P.task new ClosureSupplier<T>(callback)
 	}
 
-	static <T> Promise.Spec<T> from(final Promise<T> selfType, Closure<T> callback) {
+	static <T> Promise.Spec<T> from(final StandardPromise<T> selfType, Closure<T> callback) {
 		task null, callback
 	}
 }

@@ -19,38 +19,38 @@ package reactor.core;
 import java.util.Arrays;
 
 /**
- * A public factory to build {@link Stream}
+ * A public factory to build {@link StandardStream}
  *
  * @author Stephane Maldini
  */
 public abstract class Streams {
 	/**
-	 * Create a delayed {@link Stream} with no initial state, ready to accept values.
+	 * Create a delayed {@link StandardStream} with no initial state, ready to accept values.
 	 *
-	 * @return A {@link Stream.Spec} to further refine the {@link Stream} and then build it.
+	 * @return A {@link StandardStream.Spec} to further refine the {@link StandardStream} and then build it.
 	 */
-	public static <T> Stream.Spec<T> defer() {
-		return new Stream.Spec<T>(null);
+	public static <T> StandardStream.Spec<T> defer() {
+		return new StandardStream.Spec<T>(null);
 	}
 
 	/**
-	 * Create a delayed {@link Stream} with initial state, ready to accept values.
+	 * Create a delayed {@link StandardStream} with initial state, ready to accept values.
 	 *
-	 * @return A {@link Stream.Spec} to further refine the {@link Stream} and then build it.
+	 * @return A {@link StandardStream.Spec} to further refine the {@link StandardStream} and then build it.
 	 */
 	@SuppressWarnings("unchecked")
-	public static <T> Stream.Spec<T> defer(T value) {
-		return new Stream.Spec<T>(Arrays.asList(value));
+	public static <T> StandardStream.Spec<T> defer(T value) {
+		return new StandardStream.Spec<T>(Arrays.asList(value));
 	}
 
 	/**
-	 * Create a {@link Stream} from the given list of values.
+	 * Create a {@link StandardStream} from the given list of values.
 	 *
 	 * @param values The values to use.
 	 * @param <T>    The type of the values.
-	 * @return A {@link Stream.Spec} to further refine the {@link Stream} and then build it.
+	 * @return A {@link StandardStream.Spec} to further refine the {@link StandardStream} and then build it.
 	 */
-	public static <T> Stream.Spec<T> each(Iterable<T> values) {
-		return new Stream.Spec<T>(values);
+	public static <T> StandardStream.Spec<T> each(Iterable<T> values) {
+		return new StandardStream.Spec<T>(values);
 	}
 }

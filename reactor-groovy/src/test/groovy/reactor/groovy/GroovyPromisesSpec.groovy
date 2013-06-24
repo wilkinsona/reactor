@@ -19,7 +19,7 @@
 package reactor.groovy
 
 import reactor.core.Environment
-import reactor.core.Promise
+import reactor.core.StandardPromise
 import reactor.P
 import reactor.fn.dispatch.BlockingQueueDispatcher
 import spock.lang.Shared
@@ -56,7 +56,7 @@ class GroovyPromisesSpec extends Specification {
 		p.await() == "Hello World!"
 
 		when: "a deferred Promise"
-		p = Promise.from{"Hello World!"}.get()
+		p = StandardPromise.from{"Hello World!"}.get()
 
 		then: 'Promise contains value'
 		p.await() == "Hello World!"

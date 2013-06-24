@@ -20,13 +20,13 @@ package reactor.groovy.support
 
 import groovy.transform.CompileStatic
 import reactor.fn.Function
-import reactor.fn.support.Reduce
+import reactor.fn.support.Reduction
 
 /**
  * @author Stephane Maldini
  */
 @CompileStatic
-class ClosureReduce<T,V> implements Function<Reduce<T, V>,V>  {
+class ClosureReduce<T,V> implements Function<Reduction<T, V>,V>  {
 
 	final Closure<V> callback
 
@@ -35,10 +35,10 @@ class ClosureReduce<T,V> implements Function<Reduce<T, V>,V>  {
 	}
 
 	@Override
-	V apply(Reduce<T,V> t) {
+	V apply(Reduction<T,V> t) {
 
-		if(t.lastValue)
-			callback t.nextValue, t.lastValue
+		if(t.reducedValue)
+			callback t.nextValue, t.reducedValue
 		else
 			callback t.nextValue
 	}

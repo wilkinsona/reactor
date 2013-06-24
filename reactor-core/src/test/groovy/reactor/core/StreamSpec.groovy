@@ -24,14 +24,14 @@ import java.util.concurrent.TimeUnit
 
 import reactor.fn.Function
 import reactor.fn.Observable;
-import reactor.fn.support.Reduce
+import reactor.fn.support.Reduction
 import spock.lang.Specification
 
 class StreamSpec extends Specification {
 
 	def 'A deferred Stream with an initial value makes that value available immediately'() {
 		given: 'a composable with an initial value'
-		Stream composable = Streams.defer('test').sync().get()
+		StandardStream composable = Streams.defer('test').sync().get()
 
 		when: 'the value is retrieved'
 		def value = composable.get()
@@ -43,7 +43,7 @@ class StreamSpec extends Specification {
 	def 'A deferred Stream with an initial value passes the value to a consumer'() {
 		given: 'a composable with an initial value'
 		def values = []
-		Stream composable = Streams.defer(1).sync().get().consume(consumer { values << it })
+		StandardStream composable = Streams.defer(1).sync().get().consume(consumer { values << it })
 
 		when: 'a value is accepted'
 		composable.accept(2)
@@ -54,7 +54,7 @@ class StreamSpec extends Specification {
 
 	def 'A deferred Stream with an initial value with Future read only supplier'() {
 		given: 'a composable with an initial value'
-		Stream composable = Streams.defer(1).sync().get()
+		StandardStream composable = Streams.defer(1).sync().get()
 
 		when: 'a value is accepted'
 		def f = composable.future()
@@ -66,7 +66,7 @@ class StreamSpec extends Specification {
 
 	def 'A Stream with a known set of values makes those values available immediately'() {
 		given: 'a composable with values 1 to 5 inclusive'
-		Stream composable = Streams.each([1, 2, 3, 4, 5]).sync().get()
+		StandardStream composable = Streams.each([1, 2, 3, 4, 5]).sync().get()
 
 		when: 'the first value is retrieved'
 		def value = composable.first().get()
@@ -89,7 +89,7 @@ class StreamSpec extends Specification {
 
 	def "A Stream's initial values are not passed to consumers but subsequent values are"() {
 		given: 'a composable with values 1 to 5 inclusive'
-		Stream composable = Streams.each([1, 2, 3, 4, 5]).sync().get()
+		StandardStream composable = Streams.each([1, 2, 3, 4, 5]).sync().get()
 
 		when: 'a Consumer is registered'
 		def values = []
@@ -115,7 +115,7 @@ class StreamSpec extends Specification {
 
 	def 'Accepted values are passed to a registered Consumer'() {
 		given: 'a composable with a registered consumer'
-		Stream composable = Streams.defer().sync().get()
+		StandardStream composable = Streams.defer().sync().get()
 		def value
 		composable.consume(consumer { value = it })
 
@@ -134,7 +134,7 @@ class StreamSpec extends Specification {
 
 	def 'Accepted errors are passed to a registered Consumer'() {
 		given: 'a composable with a registered consumer of RuntimeExceptions'
-		Stream composable = Streams.defer().sync().get()
+		StandardStream composable = Streams.defer().sync().get()
 		def errors = 0
 		composable.when(RuntimeException, consumer { errors++ })
 
@@ -159,7 +159,7 @@ class StreamSpec extends Specification {
 
 	def 'Await will time out if a value is not available'() {
 		when: 'a deferred composable'
-		Stream composable = Streams.defer().sync().get()
+		StandardStream composable = Streams.defer().sync().get()
 
 		def start = System.currentTimeMillis()
 		def value = composable.await(500, TimeUnit.MILLISECONDS)
@@ -172,9 +172,9 @@ class StreamSpec extends Specification {
 
 	def 'A Stream can consume values from another Stream'() {
 		given: 'a deferred composable with a consuming Stream'
-		Stream<Integer> parent = Streams.<Integer>defer().sync().get()
-		Stream<Integer> child = Streams.<Integer>defer().sync().get()
-		parent.consume((Composable<Integer>)child)
+		StandardStream<Integer> parent = Streams.<Integer>defer().sync().get()
+		StandardStream<Integer> child = Streams.<Integer>defer().sync().get()
+		parent.consume((StandardComposable<Integer>)child)
 
 		when: 'the parent accepts a value'
 		parent.accept(1)
@@ -192,10 +192,10 @@ class StreamSpec extends Specification {
 
 	def 'When the expected accept count is exceeded, last is updated with each new value'() {
 		given: 'a composable with a known number of values'
-		Stream composable = Streams.each([1, 2, 3, 4, 5]).sync().get()
+		StandardStream composable = Streams.each([1, 2, 3, 4, 5]).sync().get()
 
 		when: 'last is retrieved'
-		Stream last = composable.last()
+		StandardStream last = composable.last()
 
 		then: 'its value is the last of the initial values'
 		last.get() == 5
@@ -209,10 +209,10 @@ class StreamSpec extends Specification {
 
 	def 'When the number of values is unknown, last is never updated'() {
 		given: 'a composable that will accept an unknown number of values'
-		Stream composable = Streams.defer().sync().get()
+		StandardStream composable = Streams.defer().sync().get()
 
 		when: 'last is retrieved'
-		Stream last = composable.last()
+		StandardStream last = composable.last()
 
 		then: 'its value is unknown'
 		last.get() == null
@@ -226,10 +226,10 @@ class StreamSpec extends Specification {
 
 	def 'When the expectedAcceptCount is reduced to a count that has been reached, last is updated with the latest value'() {
 		given: 'a composable that will accept an unknown number of values'
-		Stream composable = Streams.defer().get()
+		StandardStream composable = Streams.defer().get()
 
 		when: 'last is retrieved'
-		Stream last = composable.last()
+		StandardStream last = composable.last()
 
 		then: 'its value is unknown'
 		last.get() == null
@@ -246,8 +246,8 @@ class StreamSpec extends Specification {
 
 	def "A Stream's values can be mapped"() {
 		given: 'a source composable with a mapping function'
-		Stream source = Streams.defer().get()
-		Stream mapped = source.map(function { it * 2 })
+		StandardStream source = Streams.defer().get()
+		StandardStream mapped = source.map(function { it * 2 })
 
 		when: 'the source accepts a value'
 		source.accept(1)
@@ -258,8 +258,8 @@ class StreamSpec extends Specification {
 
 	def "A Stream's values can be filtered"() {
 		given: 'a source composable with a filter that rejects odd values'
-		Stream source = Streams.defer().get()
-		Stream filtered = source.filter(function { it % 2 == 0 })
+		StandardStream source = Streams.defer().get()
+		StandardStream filtered = source.filter(function { it % 2 == 0 })
 
 		when: 'the source accepts an even value'
 		source.accept(2)
@@ -276,8 +276,8 @@ class StreamSpec extends Specification {
 
 	def "When a mapping function throws an exception, the mapped composable accepts the error"() {
 		given: 'a source composable with a mapping function that throws an exception'
-		Stream source = Streams.defer().get()
-		Stream mapped = source.map(function { throw new RuntimeException() })
+		StandardStream source = Streams.defer().get()
+		StandardStream mapped = source.map(function { throw new RuntimeException() })
 		def errors = 0
 		mapped.when(Exception, consumer { errors++ })
 
@@ -290,8 +290,8 @@ class StreamSpec extends Specification {
 
 	def "When a filter function throws an exception, the filtered composable accepts the error"() {
 		given: 'a source composable with a filter function that throws an exception'
-		Stream source = Streams.defer().get()
-		Stream filtered = source.filter(function { throw new RuntimeException() })
+		StandardStream source = Streams.defer().get()
+		StandardStream filtered = source.filter(function { throw new RuntimeException() })
 		def errors = 0
 		filtered.when(Exception, consumer { errors++ })
 
@@ -304,10 +304,10 @@ class StreamSpec extends Specification {
 
 	def "A known set of values can be reduced"() {
 		given: 'a composable with a known set of values'
-		Stream source = Streams.each([1, 2, 3, 4, 5]).sync().get()
+		StandardStream source = Streams.each([1, 2, 3, 4, 5]).sync().get()
 
 		when: 'a reduce function is registered'
-		Stream reduced = source.reduce(new Reduction())
+		StandardStream reduced = source.reduce(new Reduction())
 
 		then: 'the resulting composable holds the reduced value'
 		reduced.get() == 120
@@ -315,7 +315,7 @@ class StreamSpec extends Specification {
 
 	def "When reducing a known set of values, only the final value is passed to consumers"() {
 		given: 'a composable with a known set of values and a reduce function'
-		Stream reduced = Streams.each([1, 2, 3, 4, 5]).sync().get().reduce(new Reduction())
+		StandardStream reduced = Streams.each([1, 2, 3, 4, 5]).sync().get().reduce(new Reduction())
 
 		when: 'a consumer is registered'
 		def values = []
@@ -333,9 +333,9 @@ class StreamSpec extends Specification {
 
 	def "When reducing a known number of values, only the final value is passed to consumers"() {
 		given: 'a composable with a known number of values and a reduce function'
-		Stream source = Streams.defer().sync().get()
+		StandardStream source = Streams.defer().sync().get()
 		source.setExpectedAcceptCount(5)
-		Stream reduced = source.reduce(new Reduction())
+		StandardStream reduced = source.reduce(new Reduction())
 		def values = []
 		reduced.consume(consumer { values << it })
 
@@ -352,10 +352,10 @@ class StreamSpec extends Specification {
 
 	def 'A known number of values can be reduced'() {
 		given: 'a composable that will accept 5 values and a reduce function'
-		Stream source = Streams.defer().sync().get()
+		StandardStream source = Streams.defer().sync().get()
 		source.expectedAcceptCount = 5
 
-		Stream reduced = source.reduce(new Reduction())
+		StandardStream reduced = source.reduce(new Reduction())
 
 		when: 'the expected number of values is accepted'
 		source.accept(1)
@@ -370,10 +370,10 @@ class StreamSpec extends Specification {
 
 	def 'When a known number of values is being reduced, only the final value is made available'() {
 		given: 'a composable that will accept 2 values and a reduce function'
-		Stream source = Streams.defer().sync().get()
+		StandardStream source = Streams.defer().sync().get()
 		source.expectedAcceptCount = 2
 
-		Stream reduced = source.reduce(new Reduction())
+		StandardStream reduced = source.reduce(new Reduction())
 
 		when: 'the first value is accepted'
 		source.accept(1)
@@ -390,8 +390,8 @@ class StreamSpec extends Specification {
 
 	def 'When an unknown number of values is being reduced, each reduction is made available'() {
 		given: 'a composable with a reduce function'
-		Stream source = Streams.defer().sync().get()
-		Stream reduced = source.reduce(new Reduction())
+		StandardStream source = Streams.defer().sync().get()
+		StandardStream reduced = source.reduce(new Reduction())
 
 		when: 'the first value is accepted'
 		source.accept(1)
@@ -408,8 +408,8 @@ class StreamSpec extends Specification {
 
 	def 'When an unknown number of values is being reduced, each reduction is passed to a consumer'() {
 		given: 'a composable with a reduce function'
-		Stream source = Streams.defer().sync().get()
-		Stream reduced = source.reduce(new Reduction())
+		StandardStream source = Streams.defer().sync().get()
+		StandardStream reduced = source.reduce(new Reduction())
 		def value
 		reduced.consume(consumer { value = it })
 
@@ -428,8 +428,8 @@ class StreamSpec extends Specification {
 
 	def 'Reduce will accumulate a list of accepted values'() {
 		given: 'a composable'
-		Stream source = Streams.defer().sync().get()
-		Stream reduced = source.reduce()
+		StandardStream source = Streams.defer().sync().get()
+		StandardStream reduced = source.reduce()
 
 		when: 'the first value is accepted'
 		source.accept(1)
@@ -440,8 +440,8 @@ class StreamSpec extends Specification {
 
 	def 'Reduce will accumulate a list of accepted values and pass it to a consumer'() {
 		given: 'a source composable and a reduced composable'
-		Stream source = Streams.defer().sync().get()
-		Stream reduced = source.reduce()
+		StandardStream source = Streams.defer().sync().get()
+		StandardStream reduced = source.reduce()
 		def value
 		reduced.consume(consumer { value = it })
 
@@ -460,7 +460,7 @@ class StreamSpec extends Specification {
 
 	def 'A composable can be mapped via an observable'() {
 		given: 'a composable and an observable with a mapping function'
-		Stream<Integer> source = Streams.defer().sync().get()
+		StandardStream<Integer> source = Streams.defer().sync().get()
 
 		Reactor reactor = Reactors.reactor().sync().get()
 
@@ -468,7 +468,7 @@ class StreamSpec extends Specification {
 		def value
 		reactor.on($('key'), consumer { value = it.data })
 
-		Stream<String> mapped = source.map('key', reactor)
+		StandardStream<String> mapped = source.map('key', reactor)
 
 		def mappedValue
 		mapped.consume(consumer { mappedValue = it })
@@ -488,7 +488,7 @@ class StreamSpec extends Specification {
 
 	def 'An Observable can consume values from a Stream'() {
 		given: 'a Stream and a Observable consumer'
-		Stream composable = Streams.defer().sync().get()
+		StandardStream composable = Streams.defer().sync().get()
 		Observable observable = Mock(Observable)
 		composable.consume('key', observable)
 
@@ -501,7 +501,7 @@ class StreamSpec extends Specification {
 
 	def 'An observable can consume values from a Stream with a known set of values'() {
 		given: 'a Stream with 3 values'
-		Stream composable = Streams.each([1, 2, 3]).sync().get()
+		StandardStream composable = Streams.each([1, 2, 3]).sync().get()
 		Observable observable = Mock(Observable)
 
 		when: 'a composable consumer is registerd'
@@ -513,9 +513,9 @@ class StreamSpec extends Specification {
 		3 * observable.notify('key', _)
 	}
 
-	static class Reduction implements Function<Reduce<Integer, Integer>, Integer> {
+	static class Reduction implements Function<Reduction<Integer, Integer>, Integer> {
 		@Override
-		public Integer apply(Reduce<Integer, Integer> reduce) {
+		public Integer apply(Reduction<Integer, Integer> reduce) {
 			def result = reduce.lastValue == null ? reduce.nextValue : reduce.lastValue * reduce.nextValue
 			println "${reduce?.lastValue} ${reduce?.nextValue} reduced to ${result}"
 			return result

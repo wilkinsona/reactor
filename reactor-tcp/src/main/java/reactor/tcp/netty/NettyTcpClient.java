@@ -39,7 +39,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import reactor.core.Environment;
-import reactor.core.Promise;
+import reactor.core.StandardPromise;
 import reactor.core.Promises;
 import reactor.core.Reactor;
 import reactor.io.Buffer;
@@ -99,8 +99,8 @@ public class NettyTcpClient<IN, OUT> extends TcpClient<IN, OUT> {
 	}
 
 	@Override
-	public Promise<TcpConnection<IN, OUT>> open() {
-		final Promise<TcpConnection<IN, OUT>> p = Promises.<TcpConnection<IN, OUT>>defer()
+	public StandardPromise<TcpConnection<IN, OUT>> open() {
+		final StandardPromise<TcpConnection<IN, OUT>> p = Promises.<TcpConnection<IN, OUT>>defer()
 																											.using(env)
 																											.using(eventsReactor)
 																											.get();
@@ -149,7 +149,7 @@ public class NettyTcpClient<IN, OUT> extends TcpClient<IN, OUT> {
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	protected void doClose(final Promise<Void> promise) {
+	protected void doClose(final StandardPromise<Void> promise) {
 		try {
 			this.ioGroup.shutdownGracefully().await().addListener(new GenericFutureListener() {
 				@Override
