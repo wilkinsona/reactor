@@ -70,7 +70,7 @@ class GroovyPromisesSpec extends Specification {
 		p.get()
 
 		then:
-		p.error
+		p.rejected
 		thrown(IllegalStateException)
 	}
 

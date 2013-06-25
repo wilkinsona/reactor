@@ -174,7 +174,7 @@ class StreamSpec extends Specification {
 		given: 'a deferred composable with a consuming Stream'
 		StandardStream<Integer> parent = Streams.<Integer>defer().sync().get()
 		StandardStream<Integer> child = Streams.<Integer>defer().sync().get()
-		parent.consume((StandardComposable<Integer>)child)
+		parent.consume((AbstractComposable<Integer>)child)
 
 		when: 'the parent accepts a value'
 		parent.accept(1)

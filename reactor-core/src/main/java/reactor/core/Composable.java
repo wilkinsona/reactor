@@ -1,14 +1,11 @@
 package reactor.core;
 
-import java.util.concurrent.TimeUnit;
-
 import reactor.fn.Consumer;
 import reactor.fn.Event;
 import reactor.fn.Function;
 import reactor.fn.Observable;
-import reactor.fn.Supplier;
 
-interface Composable<T, D extends Composable<T, D>> extends Supplier<T> {
+interface Composable<T, D extends Composable<T, D>> {
 
 	/**
 	 * Registers a {@link Consumer} that will be called to {@link Consumer#accept accept}
@@ -53,28 +50,4 @@ interface Composable<T, D extends Composable<T, D>> extends Supplier<T> {
 	 * @return {@code this}
 	 */
 	<E extends Throwable> D when(Class<E> exceptionType, Consumer<E> onError);
-
-	/**
-	 * Causes the current thread to wait for a value to become available, unless the thread is {@link
-	 * Thread#interrupt() interrupted} or the default timeout period elapses.
-	 *
-	 * @return The value that became available.
-	 *
-	 * @throws InterruptedException if the current thread is interrupted while waiting for a value
-	 */
-	T await() throws InterruptedException;
-
-	/**
-	 * Causes the current thread to wait for a value to become available, unless the thread is {@link
-	 * Thread#interrupt() interrupted} or the specified timeout period elapses.
-	 *
-	 * @param timeout the timeout period
-	 * @param unit the time unit of the {@code timeout} argument
-	 *
-	 * @return The value that became available.
-	 *
-	 * @throws InterruptedException if the current thread is interrupted while waiting for a value
-	 */
-	T await(long timeout, TimeUnit unit) throws InterruptedException;
-
 }

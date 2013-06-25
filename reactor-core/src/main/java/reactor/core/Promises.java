@@ -79,7 +79,7 @@ public abstract class Promises {
 	 * @param <T>         The type of the function result.
 	 * @return a {@link reactor.core.StandardPromise.Spec}.
 	 */
-	public static <T> StandardPromise.Spec<Collection<T>> when(StandardComposable<T>... composables) {
+	public static <T> StandardPromise.Spec<Collection<T>> when(AbstractComposable<T>... composables) {
 		return when(Arrays.asList(composables));
 	}
 
@@ -90,7 +90,7 @@ public abstract class Promises {
 	 * @param <T>         The type of the function result.
 	 * @return a {@link reactor.core.StandardPromise.Spec}.
 	 */
-	public static <T> StandardPromise.Spec<Collection<T>> when(Collection<? extends StandardComposable<T>> composables) {
+	public static <T> StandardPromise.Spec<Collection<T>> when(Collection<? extends AbstractComposable<T>> composables) {
 		return new StandardPromise.Spec<Collection<T>>(null, null, null, composables);
 	}
 }

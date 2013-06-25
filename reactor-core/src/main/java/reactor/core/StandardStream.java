@@ -42,7 +42,7 @@ import static reactor.fn.Functions.$;
  * @author Andy Wilkinson
  * @author Stephane Maldini
  */
-public class StandardStream<T> extends StandardComposable<T> {
+public class StandardStream<T> extends AbstractComposable<T> {
 
 	private final Object   firstKey      = new Object();
 	private final Selector firstSelector = $(firstKey);
@@ -84,10 +84,10 @@ public class StandardStream<T> extends StandardComposable<T> {
 	}
 
 	/**
-	 * Creates a new {@link StandardComposable} that will be triggered once, the first time {@link #accept(Object)} is called on
+	 * Creates a new {@link AbstractComposable} that will be triggered once, the first time {@link #accept(Object)} is called on
 	 * the parent.
 	 *
-	 * @return A new {@link StandardComposable} that is linked to the parent.
+	 * @return A new {@link AbstractComposable} that is linked to the parent.
 	 */
 	public StandardStream<T> first() {
 		final StandardStream<T> c = (StandardStream<T>) this.assignComposable(getObservable());
@@ -273,7 +273,7 @@ public class StandardStream<T> extends StandardComposable<T> {
 	}
 
 	@Override
-	public StandardStream<T> consume(StandardComposable<T> composable) {
+	public StandardStream<T> consume(AbstractComposable<T> composable) {
 		return (StandardStream<T>) super.consume(composable);
 	}
 

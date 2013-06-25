@@ -1,11 +1,11 @@
 package reactor.core;
 
 import reactor.fn.Function;
-import reactor.fn.support.Reduction;
+import reactor.fn.tuples.Tuple2;
 
 /**
  * A {@code Stream} provides access to a stream of values that will each become available at some
- * point in the future.
+ * point in the future. A stream works in batches.
  *
  * @author Andy Wilkinson
  * @author Jon Brisbin
@@ -15,70 +15,54 @@ import reactor.fn.support.Reduction;
 public interface Stream<T> extends Composable<T, Stream<T>> {
 
 	/**
-	 * Sets the number of values that this Stream should expect to process
+	 * Returns a new {@link Stream} that will provide access to the first value in each batch of
+	 * values that is processed by the stream.
 	 *
-	 * @param expected The number of values to expect
+	 * @return A {@code Stream} of each batch's first value
 	 *
-	 * @return {@code this}
+	 * @see #batch(long)
+	 * @see #isBatched()
 	 */
-	// TODO Should this even be possible on the consuming side?
-	Stream<T> setExpected(long expected);
+	Stream<T> first();
 
 	/**
-	 * Returns a new {@link Future} that will provide access to the first value in the stream.
+	 * Returns a new {@link Stream} that will provide access to the last value in each batch of
+	 * values that is processed by the stream.
+	 * <strong>Note:</strong> if the stream does not have a batch size, the returned stream will
+	 * always be empty
 	 *
-	 * @return A {@code Future} for the stream's first value
-	 */
-	Future<T> first();
-
-	/**
-	 * Returns a new {@link Future} that will provide access to the last value in the stream.
-	 * <strong>Note:</strong> for a stream to have a last value, it must be of known length.
-	 * If the stream's length is unknown the returned future will never make a value available.
+	 * @return A {@code Stream} of each batch's last value
 	 *
-	 * @return A {@code Future} for the stream's last value.
+	 * @see #batch(long)
+	 * @see #isBatched()
 	 */
-	// TODO Should the consumer be able to set the accept count? If so, how? What happens if
-	// accept count is changed when a stream's in use? It would make it possible for last to
-	// be reached multiple times:
-	// 	1. Accept count is 10
-	// 	2. 10 values pass through the stream, triggering last
-	//  3. Accept count is set to 15
-	//  4. 5 more values pass through the stream, triggering last again which shouldn't/can't
-	//     happen as it's a Future which works with a single value.
-	// Setting accept count also makes it possible for last to be missed:
-	//  1. Accept count is 10
-	//  2. 8 values pass through the stream
-	//  3. Accept count is set to 5. What value is passed to last? The 5th value? The 8th value?
-	//     The former's impossible without storing every value that passes through the stream.
-	Future<T> last();
+	Promise<T> last();
 
 	/**
 	 * Registers a reduction {@code function} that will be {@link Function#apply(Object) applied}
-	 * to the stream's values.
+	 * to the stream's values. The returned stream will be populated with the results of the
+	 * reduction. If this stream is batched, the value of the reduction at the end of each batch
+	 * will be passed into the returned stream. If this stream is not batched, every reduced
+	 * value will be passed into the returned stream.
 	 *
 	 * @param function The reduction function
 	 *
 	 * @return A new stream of the results of the reduction
+	 *
+	 * @see #batch(long)
+	 * @see #isBatched()
 	 */
-	// TODO How should accept count affect this? Old implementation accumulated the result until
-	// the accept count was reached and then passed the result of the reduction into the new stream.
-	// This meant that, if the accept count was set, only a single value was passed to the new
-	// stream, i.e. a Future would have been a better return type. If the accept count wasn't set,
-	// every reduced value is passed into the returned stream. Should this support batching? I.e.
-	// when the accept count is set to n, the returned stream is passed a value every n items?
-	// If so, should the reduction be reset at the start of every batch?
-	<V> Stream<V> reduce(Function<Reduction<T, V>, V> function);
+	<V> Stream<V> reduce(Function<Tuple2<T, V>, V> function);
 
 	/**
-	 * Produces a new {@code Stream} that expects {@code count} values. The new stream will
-	 * consume values from this stream.
+	 * Produces a new {@code Stream} with the given {@code batchSize}. The new stream will be
+	 * populated with the values from this stream.
 	 *
-	 * @param count The number of values to be expected by the new stream
+	 * @param batchSize The number of values to include in each batch
 	 *
 	 * @return The new stream
 	 */
-	Stream<T> take(long count);
+	Stream<T> batch(long batchSize);
 
 	/**
 	 * Registers a {@link Function} that will be {@link Function#apply(Object) applied} to each
@@ -90,5 +74,17 @@ public interface Stream<T> extends Composable<T, Stream<T>> {
 	 * @return The new {@code Stream} that provides access to the function's output
 	 */
 	<V> Stream<V> map(Function<T, V> function);
+
+	/**
+	 * Indicates whether or not this stream is batched.
+	 *
+	 * @return {@code true} if the stream is batched, otherwise {@code false}
+	 *
+	 * @see #batch(long)
+	 * @see #first()
+	 * @see #last()
+	 * @see #reduce(Function)
+	 */
+	boolean isBatched();
 
 }

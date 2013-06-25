@@ -348,7 +348,7 @@ class PromiseSpec extends Specification {
 		promise.set 2
 
 		then: "the mapped promise is rejected"
-		mapped.error
+		mapped.rejected
 	}
 
 	def "When a promise is already fulfilled, if a mapping function throws an exception the mapped promise is rejected"() {
