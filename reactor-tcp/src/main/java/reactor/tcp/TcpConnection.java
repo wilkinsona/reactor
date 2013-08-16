@@ -127,4 +127,24 @@ public interface TcpConnection<IN, OUT> {
 	 */
 	TcpConnection<IN, OUT> send(OUT data, Consumer<Boolean> onComplete);
 
+	/**
+	 * Set a callback for notification of no data having been read for at least {@code idleTime} milliseconds.
+	 *
+	 * @param idleTime The idle time in milliseconds
+	 * @param onIdle The callback
+	 *
+	 * @return {@code this}
+	 */
+	TcpConnection<IN, OUT> onReadIdle(long idleTime, Runnable onIdle);
+
+	/**
+	 * Set a callback for notification of no data having been written for at least {@code idleTime} milliseconds.
+	 *
+	 * @param idleTime The idle time in milliseconds
+	 * @param onIdle The callback
+	 *
+	 * @return {@code this}
+	 */
+	TcpConnection<IN, OUT> onWriteIdle(long idleTime, Runnable onIdle);
+
 }

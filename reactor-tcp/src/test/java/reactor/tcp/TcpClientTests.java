@@ -16,18 +16,11 @@
 
 package reactor.tcp;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import reactor.core.Environment;
-import reactor.core.composable.Promise;
-import reactor.function.Consumer;
-import reactor.io.Buffer;
-import reactor.tcp.encoding.StandardCodecs;
-import reactor.tcp.netty.NettyTcpClient;
-import reactor.tcp.spec.TcpClientSpec;
-import reactor.tuple.Tuple;
-import reactor.tuple.Tuple2;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -44,11 +37,19 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.greaterThanOrEqualTo;
-import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
+import reactor.core.Environment;
+import reactor.core.composable.Promise;
+import reactor.function.Consumer;
+import reactor.io.Buffer;
+import reactor.tcp.encoding.StandardCodecs;
+import reactor.tcp.netty.NettyTcpClient;
+import reactor.tcp.spec.TcpClientSpec;
+import reactor.tuple.Tuple;
+import reactor.tuple.Tuple2;
 
 /**
  * @author Jon Brisbin
@@ -231,6 +232,54 @@ public class TcpClientTests {
 
 		assertTrue("latch was counted down", latch.await(30, TimeUnit.SECONDS));
 		assertThat("totalDelay was >1.6s", totalDelay.get(), greaterThanOrEqualTo(1600L));
+	}
+
+	@Test
+	public void idleWriteTimeout() throws InterruptedException {
+		final CountDownLatch idleLatch = new CountDownLatch(2);
+		long start = System.currentTimeMillis();
+		new TcpClientSpec<Buffer, Buffer>(NettyTcpClient.class)
+		.env(env)
+		.connect("localhost", ECHO_SERVER_PORT)
+		.get()
+		.open()
+		.consume(new Consumer<TcpConnection<Buffer, Buffer>>() {
+			@Override
+			public void accept(TcpConnection<Buffer, Buffer> connection) {
+				connection.onWriteIdle(500, new Runnable() {
+					public void run() {
+						idleLatch.countDown();
+					}
+				});
+			}
+		});
+		assertTrue(idleLatch.await(5, TimeUnit.SECONDS));
+		long duration = System.currentTimeMillis() - start;
+		assertThat(duration, greaterThanOrEqualTo(1000L));
+	}
+
+	@Test
+	public void idleReadTimeout() throws InterruptedException {
+		final CountDownLatch idleLatch = new CountDownLatch(2);
+		long start = System.currentTimeMillis();
+		new TcpClientSpec<Buffer, Buffer>(NettyTcpClient.class)
+		.env(env)
+		.connect("localhost", ECHO_SERVER_PORT)
+		.get()
+		.open()
+		.consume(new Consumer<TcpConnection<Buffer, Buffer>>() {
+			@Override
+			public void accept(TcpConnection<Buffer, Buffer> connection) {
+				connection.onReadIdle(500, new Runnable() {
+					public void run() {
+						idleLatch.countDown();
+					}
+				});
+			}
+		});
+		assertTrue(idleLatch.await(5, TimeUnit.SECONDS));
+		long duration = System.currentTimeMillis() - start;
+		assertThat(duration, greaterThanOrEqualTo(1000L));
 	}
 
 	private final ExecutorService threadPool = Executors.newCachedThreadPool();

@@ -19,7 +19,17 @@ package reactor.tcp.netty;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.socket.SocketChannel;
+import io.netty.handler.timeout.IdleState;
+import io.netty.handler.timeout.IdleStateEvent;
+import io.netty.handler.timeout.IdleStateHandler;
+
+import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
+import java.util.concurrent.TimeUnit;
+
 import reactor.core.Environment;
 import reactor.core.Reactor;
 import reactor.event.Event;
@@ -27,10 +37,8 @@ import reactor.event.dispatch.Dispatcher;
 import reactor.function.Consumer;
 import reactor.io.Buffer;
 import reactor.tcp.AbstractTcpConnection;
+import reactor.tcp.TcpConnection;
 import reactor.tcp.encoding.Codec;
-
-import java.net.InetSocketAddress;
-import java.nio.ByteBuffer;
 
 /**
  * A {@link reactor.tcp.TcpConnection} implementation that uses Netty.
@@ -122,6 +130,40 @@ class NettyTcpConnection<IN, OUT> extends AbstractTcpConnection<IN, OUT> {
 				}
 			}
 		});
+	}
+
+	public TcpConnection<IN, OUT> onReadIdle(long idleTime, final Runnable onIdle) {
+		IdleStateHandler idleStateHandler = new IdleStateHandler(idleTime, 0, 0, TimeUnit.MILLISECONDS);
+		channel.pipeline().addLast(idleStateHandler);
+		channel.pipeline().addLast(new ChannelInboundHandlerAdapter() {
+
+			@Override
+			public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
+				if (evt instanceof IdleStateEvent && ((IdleStateEvent)evt).state() == IdleState.READER_IDLE) {
+					onIdle.run();
+				}
+				super.userEventTriggered(ctx, evt);
+			}
+		});
+
+		return this;
+	}
+
+	public TcpConnection<IN, OUT> onWriteIdle(long idleTime, final Runnable onIdle) {
+		IdleStateHandler idleStateHandler = new IdleStateHandler(0, idleTime, 0, TimeUnit.MILLISECONDS);
+		channel.pipeline().addLast(idleStateHandler);
+		channel.pipeline().addLast(new ChannelInboundHandlerAdapter() {
+
+			@Override
+			public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
+				if (evt instanceof IdleStateEvent && ((IdleStateEvent)evt).state() == IdleState.WRITER_IDLE) {
+					onIdle.run();
+				}
+				super.userEventTriggered(ctx, evt);
+			}
+		});
+
+		return this;
 	}
 
 	@Override
